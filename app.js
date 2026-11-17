@@ -42,9 +42,10 @@
     vocab1: { name: "Vocab · " + LISTS.vocab1.title, icon: "🔤", sub: LISTS.vocab1.sub },
     vocab2: { name: "Vocab · " + LISTS.vocab2.title, icon: "🔤", sub: LISTS.vocab2.sub },
     vocab3: { name: "Vocab · " + LISTS.vocab3.title, icon: "🔤", sub: LISTS.vocab3.sub },
-    toolkit: { name: "Discussion Toolkit", icon: "🗣️", sub: "Choose the best move in a discussion" },
-    argument: { name: "Argument Lab", icon: "🧩", sub: "Identify the line of argument (exam part I)" },
-    quiz: { name: "Media & Shakespeare Quiz", icon: "❓", sub: "Content of our unit" }
+    toolkit: { name: "Discussion Toolkit", icon: "🗣️", sub: "Which move fits the situation? All options are polite – only one does the job." },
+    language: { name: "Language Lab", icon: "🛠️", sub: "Germanisms, false friends, collocations, reporting verbs" },
+    argument: { name: "Argument Lab", icon: "🧩", sub: "Analyse opinion pieces: structure, techniques, reporting verbs (part I)" },
+    quiz: { name: "Media & Shakespeare Quiz", icon: "❓", sub: "Concepts, cases and Shakespeare – think twice!" }
   };
 
   // seeded random
@@ -110,8 +111,8 @@
       <div class="card"><b>🎯 Countdown: oral exam in ${EXAM}</b><p class="muted">Part I: present the line of argument of your text · Part II: discuss with your group. Train both here – and remember: language counts 30 of 50 points.</p></div>
       <div class="grid">
         <div class="tile" data-go="learn"><b>📚 Learn</b><small>Flashcards, discussion phrases, argument structure</small></div>
-        <div class="tile" data-go="practice"><b>🎯 Practice</b><small>Vocab, toolkit, argument lab, quiz</small></div>
-        <div class="tile" data-go="speak"><b>🎙️ Speak</b><small>Panel cards with timer – train part II</small></div>
+        <div class="tile" data-go="practice"><b>🎯 Practice</b><small>Vocab, toolkit, language lab, argument lab, quiz</small></div>
+        <div class="tile" data-go="speak"><b>🎙️ Speak</b><small>Present a text (part I), quick responses, panel cards (part II)</small></div>
         <div class="tile" data-go="duels"><b>⚔️ Duels</b><small>Challenge a classmate</small></div>
         <div class="tile" data-go="ranking"><b>🏆 Ranking</b><small>Exam groups & top 10</small></div>
       </div>
@@ -150,7 +151,7 @@
     $main.innerHTML = `<h1>📚 Learn</h1><h2>Vocabulary (flashcards)</h2><div class="grid">${tiles}</div>
       <h2>Skills</h2><div class="grid">
         <div class="tile" id="phr"><b>🗣️ Discussion phrases</b><small>Conceding, clarifying, interrupting, referring, compromising …</small></div>
-        <div class="tile" id="arg"><b>🧩 Line of argument</b><small>How to present a text in part I</small></div></div>`;
+        <div class="tile" id="arg"><b>🧩 Line of argument</b><small>Building blocks, persuasive techniques, reporting verbs</small></div></div>`;
     $main.querySelectorAll("[data-list]").forEach((t) => (t.onclick = () => flashcards(t.dataset.list)));
     document.getElementById("phr").onclick = phrases; document.getElementById("arg").onclick = argumentHelp;
   }
@@ -186,7 +187,10 @@
   }
   function argumentHelp() {
     $main.innerHTML = `<h1>🧩 Presenting a line of argument</h1>
-      <div class="card"><b>The building blocks</b><ul>${FUNCTIONS.map((f) => `<li><b>${esc(f)}</b> – ${esc(FUNCTION_HELP[f])}</li>`).join("")}</ul></div>
+      <div class="card"><b>The building blocks</b><ul>${FUNCTIONS.map((f) => `<li><b>${esc(f)}</b> – ${esc(FUNCTION_HELP[f])}</li>`).join("")}</ul>
+        <p class="muted">Careful: real texts don't follow a fixed order. Many start with an anecdote or with the opposing view, some save the claim for the end.</p></div>
+      <div class="card"><b>Persuasive techniques</b><ul>${TECHNIQUES.map((t) => `<li><b>${esc(t[0])}</b> – ${esc(t[1])}</li>`).join("")}</ul></div>
+      <div class="card"><b>Reporting verbs (what the author does)</b><ul>${REPORTING_VERBS.map((v) => `<li>${esc(v)}</li>`).join("")}</ul></div>
       <div class="card"><b>Part I – how to present your text</b><ol>
         <li><b>Introduction:</b> In her blog post '…', published on/in …, the author argues that …</li>
         <li><b>Structure:</b> She begins by … · She supports this by … · She then concedes that … · However, she counters this by … · She concludes by …</li>
@@ -202,15 +206,24 @@
       <div class="grid">${Object.entries(MODES).map(([k, m]) => `<div class="tile" data-mode="${k}"><b>${m.icon} ${esc(m.name)}</b><small>${esc(m.sub)}</small></div>`).join("")}</div>`;
     $main.querySelectorAll("[data-mode]").forEach((t) => (t.onclick = () => playRound({ mode: t.dataset.mode, seed: newSeed(), scored: !!state.code })));
   }
+  function renderText(text, h) {
+    let html = "<p>";
+    text.s.forEach((s, k) => {
+      if (k > 0 && text.br.includes(k)) html += "</p><p>";
+      html += k === h ? `<span class="hl">${esc(s)}</span> ` : `${esc(s)} `;
+    });
+    return html + "</p>";
+  }
   function buildRound(mode, seed) {
     const rand = rng(seed);
     if (mode.startsWith("vocab")) return shuffle(LISTS[mode].words, rand).slice(0, 10).map((w) => ({ t: "type", q: w[0], answers: w.slice(1) }));
-    if (mode === "toolkit") return shuffle(TOOLKIT, rand).slice(0, 10).map((x) => { const opts = shuffle(x.o.map((o, i) => ({ o, ok: i === x.a })), rand); return { t: "mc", head: "What's the best move?", q: x.s, opts, why: x.why }; });
-    if (mode === "quiz") return shuffle(QUIZ, rand).slice(0, 10).map((x) => ({ t: "mc", head: "Quiz", q: x.q, opts: shuffle(x.o.map((o, i) => ({ o, ok: i === x.a })), rand) }));
+    const opts = (x) => shuffle(x.o.map((o, i) => ({ o, ok: i === x.a })), rand);
+    if (mode === "toolkit") return shuffle(TOOLKIT, rand).slice(0, 10).map((x) => ({ t: "mc", head: "What's the best move?", q: x.s, opts: opts(x), why: x.why }));
+    if (mode === "language") return shuffle(LANGUAGE, rand).slice(0, 10).map((x) => ({ t: "mc", head: "Language Lab", q: x.k, opts: opts(x), why: x.why }));
+    if (mode === "quiz") return shuffle(QUIZ, rand).slice(0, 10).map((x) => ({ t: "mc", head: "Quiz", q: x.q, opts: opts(x) }));
     if (mode === "argument") {
-      const out = [];
-      for (const text of shuffle(ARGUMENTS, rand)) { text.s.forEach((s, k) => { if (out.length < 10) out.push({ t: "label", text, k, a: s[1] }); }); if (out.length >= 10) break; }
-      return out;
+      // two texts, five analysis questions each
+      return shuffle(ARGUMENTS, rand).slice(0, 2).flatMap((text) => text.q.map((x) => ({ t: "text", text, h: x.h, q: x.k, opts: opts(x), why: x.why })));
     }
   }
   function playRound(opts) {
@@ -237,6 +250,18 @@
           btns.forEach((x) => { x.disabled = true; if (q.opts[+x.dataset.k].ok) x.classList.add("ok"); });
           if (o.ok) score++; else b.classList.add("bad");
           document.getElementById("fb").innerHTML = fb(o.ok, "Better: <b>" + esc(q.opts.find((x) => x.ok).o) + "</b>") + (q.why ? `<p class="muted">💡 ${esc(q.why)}</p>` : ""); bindNext(); }));
+      } else if (q.t === "text") {
+        $main.innerHTML = `${header()}<div class="card"><h2 style="margin:0">“${esc(q.text.t)}”</h2><div class="muted">${esc(q.text.by)}</div>
+          <div class="textbox" style="margin-top:10px">${renderText(q.text, q.h)}</div></div>
+          <div class="card"><div class="prompt" style="font-size:19px">${q.h === null ? "" : "🖍️ "}${esc(q.q)}</div>
+          <div class="choices" style="grid-template-columns:1fr">${q.opts.map((o, k) => `<button data-k="${k}" style="text-align:left;font-size:16px">${esc(o.o)}</button>`).join("")}</div><div id="fb"></div></div>`;
+        const btns = $main.querySelectorAll("[data-k]");
+        btns.forEach((b) => (b.onclick = () => { const o = q.opts[+b.dataset.k];
+          btns.forEach((x) => { x.disabled = true; if (q.opts[+x.dataset.k].ok) x.classList.add("ok"); });
+          if (o.ok) score++; else b.classList.add("bad");
+          document.getElementById("fb").innerHTML = fb(o.ok, "Better: <b>" + esc(q.opts.find((x) => x.ok).o) + "</b>") + (q.why ? `<p class="muted">💡 ${esc(q.why)}</p>` : ""); bindNext();
+          document.getElementById("fb").scrollIntoView({ behavior: "smooth", block: "nearest" }); }));
+        window.scrollTo(0, 0);
       } else if (q.t === "label") {
         const textHtml = q.text.s.map((s, k) => k < q.k ? `<span class="done">${esc(s[0])} </span>` : k === q.k ? `<span class="hl">${esc(s[0])}</span> ` : "").join("");
         $main.innerHTML = `${header()}<div class="card"><div class="muted">What is the function of the highlighted sentence?</div><h2 style="margin-top:6px">“${esc(q.text.t)}”</h2>
@@ -274,12 +299,66 @@
   function viewSpeak() {
     const done = state.me ? state.me.panel_today : 0;
     $main.innerHTML = `<h1>🎙️ Speak</h1>
-      <div class="card"><p>Train <b>part II</b> of your exam: draw a panel card, think for one minute, then discuss for three minutes – with your exam group, a partner or on your own (record yourself!).</p>
-        <p class="muted">After speaking, tick the discussion moves you used. Each session = 3 XP (max. 5 per day${state.code ? `, today: ${done}/5` : ""}). Be honest – it's your exam. 😉</p>
-        <button class="btn" id="draw">🎴 Draw a panel card</button></div>
-      <div class="card"><b>All cards</b><ul class="list">${PANEL.map((p, k) => `<li><span>${esc(p.q)}</span><button class="btn small alt" data-p="${k}">Use</button></li>`).join("")}</ul></div>`;
+      <p class="muted">Every speaking session = 3 XP (max. 5 per day${state.code ? `, today: ${done}/5` : ""}). Be honest – it's your exam. 😉 Tip: record yourself and listen to it.</p>
+      <div class="grid">
+        <div class="tile" id="sp1"><b>📄 Part I: present a text</b><small>Read an opinion piece (3 min), then present its line of argument (2 min).</small></div>
+        <div class="tile" id="sp2"><b>⚡ Quick response</b><small>A provocative statement – 30 seconds to react with a given discussion move.</small></div>
+        <div class="tile" id="draw"><b>🎴 Part II: panel card</b><small>1 min to prepare, 3 min to discuss with your group or a partner.</small></div>
+      </div>
+      <div class="card" style="margin-top:12px"><b>All panel cards</b><ul class="list">${PANEL.map((p, k) => `<li><span>${esc(p.q)}</span><button class="btn small alt" data-p="${k}">Use</button></li>`).join("")}</ul></div>`;
     document.getElementById("draw").onclick = () => panel(Math.floor(Math.random() * PANEL.length));
+    document.getElementById("sp1").onclick = () => presentText(Math.floor(Math.random() * ARGUMENTS.length));
+    document.getElementById("sp2").onclick = () => drill(shuffle(DRILLS, rng(newSeed())), 0);
     $main.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => panel(+b.dataset.p)));
+  }
+  function runTimer(el, ph, secs, label, then) {
+    let left = secs; ph.textContent = label; clearInterval(timerId);
+    const show = () => { el.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`; };
+    show(); timerId = setInterval(() => { left--; show(); if (left <= 0) { clearInterval(timerId); then && then(); } }, 1000);
+  }
+  function logButton(checkSel, min) {
+    return async () => {
+      const n = $main.querySelectorAll(checkSel + ":checked").length; const res = document.getElementById("res");
+      if (!state.code) { res.innerHTML = '<p class="muted">Well done! Sign in to collect XP for speaking.</p>'; return; }
+      if (n < min) { res.innerHTML = `<p class="err">Tick what you managed to do (at least ${min}).</p>`; return; }
+      try { state.me = await rpc("submit_panel", { p_code: state.code, p_functions: n }); renderMe(); touchStreak(); clearInterval(timerId);
+        res.innerHTML = `<div class="feedback ok">+3 XP saved ✔ – ${n} point${n === 1 ? "" : "s"} on your checklist.</div>`; document.getElementById("log").disabled = true; }
+      catch (e) { res.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+    };
+  }
+  function presentText(k) {
+    const text = ARGUMENTS[k]; clearInterval(timerId);
+    const checks = ["Introductory sentence: title, author, type of text, main claim", "Structure: how the text begins, develops and ends", "At least three precise reporting verbs (argues, concedes, dismisses …)", "One persuasive technique and its effect", "Your own, reasoned opinion", "Spoke freely, with notes only"];
+    $main.innerHTML = `<div class="card"><div class="muted">Part I practice – present the line of argument</div><h2 style="margin:4px 0">“${esc(text.t)}”</h2><div class="muted">${esc(text.by)}</div>
+        <div class="textbox" style="margin-top:10px">${renderText(text, -1)}</div></div>
+      <div class="card"><div class="timer" id="t">3:00</div><p class="center muted" id="phase">Reading and notes: claim, structure, techniques.</p>
+        <div class="row" style="justify-content:center"><button class="btn" id="start">▶ Start</button><button class="btn alt" id="skip">I'm ready – start presenting</button><button class="btn alt" id="other">Other text</button></div></div>
+      <div class="card"><b>Checklist after your presentation</b>${checks.map((c, n) => `<label class="check"><input type="checkbox" data-c="${n}"> <span>${esc(c)}</span></label>`).join("")}
+        <div class="row" style="margin-top:12px"><button class="btn lime" id="log">✔ Log session (+3 XP)</button><button class="btn alt" data-go="speak">Back</button></div><div id="res"></div>
+        <p class="muted">Then check yourself: do the Argument Lab questions for this text in Practice.</p></div>`;
+    const t = document.getElementById("t"), ph = document.getElementById("phase");
+    const present = () => runTimer(t, ph, 120, "Present now: introduction – structure – techniques – your opinion.", () => { ph.textContent = "Time's up – tick your checklist."; });
+    document.getElementById("start").onclick = () => runTimer(t, ph, 180, "Reading and notes: claim, structure, techniques.", present);
+    document.getElementById("skip").onclick = present;
+    document.getElementById("other").onclick = () => presentText((k + 1) % ARGUMENTS.length);
+    document.getElementById("log").onclick = logButton("[data-c]", 2);
+  }
+  function drill(list, n) {
+    const d = list[n % list.length]; clearInterval(timerId);
+    $main.innerHTML = `<div class="card hero"><div class="muted">Quick response · ${n + 1}</div><h1 style="margin-top:4px">“${esc(d.st)}”</h1><p style="margin:0"><b>Your move:</b> ${esc(d.fn)}</p></div>
+      <div class="card"><div class="timer" id="t">0:30</div><p class="center muted" id="phase">Read the statement – press start and answer out loud.</p>
+        <div class="row" style="justify-content:center"><button class="btn" id="start">▶ Start (30 s)</button><button class="btn alt" id="next">Next statement ➜</button></div></div>
+      <div class="card"><b>Need help?</b> <button class="btn small alt" id="help">Show phrases</button><div id="ph"></div></div>
+      <div class="card"><b>After 3 or more statements: log your session</b>
+        <label class="check"><input type="checkbox" data-c="0"> <span>I answered at least three statements out loud.</span></label>
+        <label class="check"><input type="checkbox" data-c="1"> <span>I used the required move each time.</span></label>
+        <label class="check"><input type="checkbox" data-c="2"> <span>I gave a reason or an example each time.</span></label>
+        <div class="row" style="margin-top:12px"><button class="btn lime" id="log">✔ Log session (+3 XP)</button><button class="btn alt" data-go="speak">Back</button></div><div id="res"></div></div>`;
+    const t = document.getElementById("t"), ph = document.getElementById("phase");
+    document.getElementById("start").onclick = () => runTimer(t, ph, 30, "Go! Use the required move.", () => { ph.textContent = "Time's up – next statement?"; });
+    document.getElementById("next").onclick = () => drill(list, n + 1);
+    document.getElementById("help").onclick = () => { document.getElementById("ph").innerHTML = TOOLKIT_PHRASES.map((g) => `<p><b>${esc(g.f)}:</b> ${g.p.map(esc).join(" · ")}</p>`).join(""); };
+    document.getElementById("log").onclick = logButton("[data-c]", 1);
   }
   let timerId = null;
   function panel(k) {

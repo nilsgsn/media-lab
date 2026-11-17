@@ -10,8 +10,8 @@
     BAD_OPPONENT: "Spieler:in nicht gefunden.",
     BAD_RESULT: "Ungültige Eingabe."
   };
-  const MODE_SHORT = { vocab1: "V1", vocab2: "V2", vocab3: "V3", toolkit: "Tool", argument: "Arg", quiz: "Quiz" };
-  const MODE_LONG = { vocab1: "Vokabeln Test 1 (16.11.)", vocab2: "Vokabeln Test 2 (30.11.)", vocab3: "Vokabeln Test 3 (14.12.)", toolkit: "Discussion Toolkit", argument: "Argument Lab", quiz: "Inhalts-Quiz" };
+  const MODE_SHORT = { vocab1: "V1", vocab2: "V2", vocab3: "V3", toolkit: "Tool", language: "Lang", argument: "Arg", quiz: "Quiz" };
+  const MODE_LONG = { vocab1: "Vokabeln Test 1 (16.11.)", vocab2: "Vokabeln Test 2 (30.11.)", vocab3: "Vokabeln Test 3 (14.12.)", toolkit: "Discussion Toolkit", language: "Language Lab", argument: "Argument Lab", quiz: "Inhalts-Quiz" };
 
   async function rpc(fn, args) {
     let res;
@@ -118,7 +118,7 @@
     v.innerHTML = `<div class="card">
       <div class="row" style="justify-content:space-between"><div class="row"><b>Gruppe:</b>
         <select id="course"><option value="all">alle</option>${[1,2,3,4,5,6,7,8,9].map((g) => `<option value="${g}">${g}</option>`).join("")}<option value="">ohne</option></select></div>
-        <span class="muted">Trefferquote: V1–V3 = Vokabeln, Tool = Discussion Toolkit, Arg = Argument Lab, Quiz = Inhalte</span></div>
+        <span class="muted">Trefferquote: V1–V3 = Vokabeln, Tool = Discussion Toolkit, Lang = Language Lab, Arg = Argument Lab, Quiz = Inhalte</span></div>
       <div class="scroll" style="margin-top:10px"><table class="t"><thead><tr>
         ${th("nickname", "Spitzname")}${th("team", "Gruppe", 1)}${th("code", "Code")}${th("xp", "XP", 1)}${th("week", "Woche", 1)}${th("rounds_week", "Runden Woche", 1)}${th("rounds", "Runden ges.", 1)}${th("panels", "Sprechen", 1)}${th("last_active", "zuletzt aktiv")}
         ${Object.keys(MODE_SHORT).map((m) => th("m:" + m, MODE_SHORT[m], 1)).join("")}<th></th></tr></thead>
