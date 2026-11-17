@@ -12,7 +12,7 @@
     BAD_NICK: "Nickname: 3–16 letters, numbers or _ (no spaces).",
     NICK_TAKEN: "This nickname is already taken.",
     NO_NICK: "Choose a nickname first.",
-    TOO_FAST: "Slow down – wait a moment and try again.",
+    TOO_FAST: "Slow down – please wait about a minute between two saved activities, then try again.",
     PANEL_LIMIT: "You've already logged 5 speaking sessions today. Great work – come back tomorrow!",
     BAD_OPPONENT: "This player does not exist.",
     TOO_MANY_OPEN: "You already have 5 open duels. Wait for answers first.",
